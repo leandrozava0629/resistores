@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>RESISTOR</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #0b1329; color: #ffffff; display: flex; justify-content: center; padding: 20px 10px; }
+    
+    .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
+    
+    h1 { text-align: center; font-size: 1.4rem; font-weight: 700; margin-bottom: 5px; color: #ffffff; }
+    
+    /* Gráfica de la resistencia */
+    .resistor-display {
+      background-color: #1a233a; border-radius: 12px; height: 90px;
+      display: flex; align-items: center; justify-content: center; width: 100%;
+    }
+    .resistor-wire { width: 100%; max-width: 280px; height: 6px; background-color: #64748b; display: flex; align-items: center; justify-content: center; }
+    .resistor-body {
+      width: 140px; height: 42px; background-color: #cbd5e1; border-radius: 14px;
+      display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
+    }
+    .band { width: 12px; height: 100%; transition: background-color 0.2s ease; }
+    
+    /* Selector de bandas */
+    .selector-card {
+      background-color: #1a233a; border-radius: 10px; padding: 10px 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .selector-info { display: flex; flex-direction: column; gap: 2px; }
+    .selector-title { font-size: 0.75rem; color: #94a3b8; }
+    .selector-value { font-size: 0.95rem; font-weight: 600; color: #ffffff; }
+    
+    .btn-cambiar {
+      border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 8px; padding: 6px 16px;
+      font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: transform 0.1s ease;
+    }
+    .btn-cambiar:active { transform: scale(0.95); }
+    
+    /* Botón calcular */
+    .btn-calcular {
+      background-color: #0284c7; color: white; border: none; border-radius: 8px;
+      padding: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 4px;
+    }
+    .btn-calcular:hover { background-color: #0369a1; }
+    
+    /* Resultados */
+    .result-card {
+      background-color: #1a233a; border-radius: 10px; padding: 16px; text-align: center; display: flex; flex-direction: column; gap: 8px;
+    }
+    .result-title { font-size: 0.8rem; color: #94a3b8; }
+    .result-main { font-size: 1.4rem; font-weight: bold; color: #ffffff; }
+    .divider { height: 1px; background-color: #334155; margin: 6px 0; }
+    
+    .result-range { display: flex; justify-content: space-between; }
+    .range-box { display: flex; flex-direction: column; gap: 2px; }
+    .range-box.left { text-align: left; }
+    .range-box.right { text-align: right; }
+    .range-label { font-size: 0.75rem; color: #94a3b8; }
+    .range-val-min { font-size: 0.95rem; font-weight: bold; color: #4ade80; }
+    .range-val-max { font-size: 0.95rem; font-weight: bold; color: #f87171; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>RESISTOR</h1>
+    
+    <!-- Dibujo dinámico del resistor -->
+    <div class="resistor-display">
+      <div class="resistor-wire">
+        <div class="resistor-body">
+          <div id="graphic-b1" class="band"></div>
+          <div id="graphic-b2" class="band"></div>
+          <div id="graphic-mult" class="band"></div>
+          <div id="graphic-tol" class="band"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controles -->
+    <div class="selector-card">
+      <div class="selector-info">
+        <span class="selector-title">1ra Banda</span>
+        <span id="txt-b1" class="selector-value">Verde</span>
+      </div>
+      <button id="btn-b1" class="btn-cambiar" onclick="cambiarBanda(1)">Cambiar</button>
+    </div>
+
+    <div class="selector-card">
+      <div class="selector-info">
+        <span class="selector-title">2da Banda</span>
+        <span id="txt-b2" class="selector-value">Negro</span>
+      </div>
+      <button id="btn-b2" class="btn-cambiar" onclick="cambiarBanda(2)">Cambiar</button>
+    </div>
+
+    <div class="selector-card">
+      <div class="selector-info">
+        <span class="selector-title">Multiplicador</span>
+        <span id="txt-mult" class="selector-value">Azul (x1M)</span>
+      </div>
+      <button id="btn-mult" class="btn-cambiar" onclick="cambiarBanda(3)">Cambiar</button>
+    </div>
+
+    <div class="selector-card">
+      <div class="selector-info">
+        <span class="selector-title">Tolerancia (4ta)</span>
+        <span id="txt-tol" class="selector-value">Dorado (±5.0%)</span>
+      </div>
+      <button id="btn-tol" class="btn-cambiar" onclick="cambiarBanda(4)">Cambiar</button>
+    </div>
+
+    <button class="btn-calcular" onclick="calcular()">Calcular Valor</button>
+
+    <!-- Tarjeta de Resultados -->
+    <div class="result-card">
+      <span class="result-title">Valor de la Resistencia</span>
+      <span id="res-nominal" class="result-main">5.00 MΩ (±5.0%)</span>
+      <div class="divider"></div>
+      <div class="result-range">
+        <div class="range-box left">
+          <span id="lbl-min" class="range-label">Valor Mínimo (-5.0%):</span>
+          <span id="res-min" class="range-val-min">4.75 MΩ</span>
+        </div>
+        <div class="range-box right">
+          <span id="lbl-max" class="range-label">Valor Máximo (+5.0%):</span>
+          <span id="res-max" class="range-val-max">5.25 MΩ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const digitos = [
+      { nombre: "Negro", val: 0, bg: "#000000", text: "#ffffff" },
+      { nombre: "Marrón", val: 1, bg: "#8b4513", text: "#ffffff" },
+      { nombre: "Rojo", val: 2, bg: "#ff0000", text: "#ffffff" },
+      { nombre: "Naranja", val: 3, bg: "#ffa500", text: "#000000" },
+      { nombre: "Amarillo", val: 4, bg: "#ffff00", text: "#000000" },
+      { nombre: "Verde", val: 5, bg: "#008000", text: "#ffffff" },
+      { nombre: "Azul", val: 6, bg: "#0000ff", text: "#ffffff" },
+      { nombre: "Violeta", val: 7, bg: "#8a2be2", text: "#ffffff" },
+      { nombre: "Gris", val: 8, bg: "#808080", text: "#ffffff" },
+      { nombre: "Blanco", val: 9, bg: "#ffffff", text: "#000000" }
+    ];
+
+    const multiplicadores = [
+      { nombre: "Negro (x1)", factor: 1, bg: "#000000", text: "#ffffff" },
+      { nombre: "Marrón (x10)", factor: 10, bg: "#8b4513", text: "#ffffff" },
+      { nombre: "Rojo (x100)", factor: 100, bg: "#ff0000", text: "#ffffff" },
+      { nombre: "Naranja (x1k)", factor: 1000, bg: "#ffa500", text: "#000000" },
+      { nombre: "Amarillo (x10k)", factor: 10000, bg: "#ffff00", text: "#000000" },
+      { nombre: "Verde (x100k)", factor: 100000, bg: "#008000", text: "#ffffff" },
+      { nombre: "Azul (x1M)", factor: 1000000, bg: "#0000ff", text: "#ffffff" },
+      { nombre: "Dorado (x0.1)", factor: 0.1, bg: "#ffd700", text: "#000000" },
+      { nombre: "Plateado (x0.01)", factor: 0.01, bg: "#c0c0c0", text: "#000000" }
+    ];
+
+    const tolerancias = [
+      { nombre: "Marrón (±1.0%)", porc: 1.0, bg: "#8b4513", text: "#ffffff" },
+      { nombre: "Rojo (±2.0%)", porc: 2.0, bg: "#ff0000", text: "#ffffff" },
+      { nombre: "Dorado (±5.0%)", porc: 5.0, bg: "#ffd700", text: "#000000" },
+      { nombre: "Plateado (±10.0%)", porc: 10.0, bg: "#c0c0c0", text: "#000000" }
+    ];
+
+    let idx1 = 5; // Verde
+    let idx2 = 0; // Negro
+    let idxMult = 6; // Azul
+    let idxTol = 2; // Dorado
+
+    function actualizarInterfaz() {
+      const b1 = digitos[idx1];
+      const b2 = digitos[idx2];
+      const mult = multiplicadores[idxMult];
+      const tol = tolerancias[idxTol];
+
+      // Actualizar textos
+      document.getElementById("txt-b1").innerText = b1.nombre;
+      document.getElementById("txt-b2").innerText = b2.nombre;
+      document.getElementById("txt-mult").innerText = mult.nombre;
+      document.getElementById("txt-tol").innerText = tol.nombre;
+
+      // Actualizar colores de los botones
+      setBtnStyle("btn-b1", b1.bg, b1.text);
+      setBtnStyle("btn-b2", b2.bg, b2.text);
+      setBtnStyle("btn-mult", mult.bg, mult.text);
+      setBtnStyle("btn-tol", tol.bg, tol.text);
+
+      // Actualizar colores de las bandas gráficas
+      document.getElementById("graphic-b1").style.backgroundColor = b1.bg;
+      document.getElementById("graphic-b2").style.backgroundColor = b2.bg;
+      document.getElementById("graphic-mult").style.backgroundColor = mult.bg;
+      document.getElementById("graphic-tol").style.backgroundColor = tol.bg;
+    }
+
+    function setBtnStyle(id, bg, text) {
+      const btn = document.getElementById(id);
+      btn.style.backgroundColor = bg;
+      btn.style.color = text;
+    }
+
+    function cambiarBanda(tipo) {
+      if (tipo === 1) idx1 = (idx1 + 1) % digitos.length;
+      if (tipo === 2) idx2 = (idx2 + 1) % digitos.length;
+      if (tipo === 3) idxMult = (idxMult + 1) % multiplicadores.length;
+      if (tipo === 4) idxTol = (idxTol + 1) % tolerancias.length;
+      actualizarInterfaz();
+    }
+
+    function formatearOhmios(valor) {
+      if (valor >= 1000000) return (valor / 1000000).toFixed(2) + " MΩ";
+      if (valor >= 1000) return (valor / 1000).toFixed(2) + " kΩ";
+      return valor.toFixed(2) + " Ω";
+    }
+
+    function calcular() {
+      const b1 = digitos[idx1];
+      const b2 = digitos[idx2];
+      const mult = multiplicadores[idxMult];
+      const tol = tolerancias[idxTol];
+
+      const nominal = (b1.val * 10 + b2.val) * mult.factor;
+      const variacion = nominal * (tol.porc / 100);
+      const min = nominal - variacion;
+      const max = nominal + variacion;
+
+      document.getElementById("res-nominal").innerText = `${formatearOhmios(nominal)} (±${tol.porc.toFixed(1)}%)`;
+      document.getElementById("lbl-min").innerText = `Valor Mínimo (-${tol.porc.toFixed(1)}%):`;
+      document.getElementById("lbl-max").innerText = `Valor Máximo (+${tol.porc.toFixed(1)}%):`;
+      document.getElementById("res-min").innerText = formatearOhmios(min);
+      document.getElementById("res-max").innerText = formatearOhmios(max);
+    }
+
+    // Inicializar al cargar
+    actualizarInterfaz();
+  </script>
+</body>
+</html>
